@@ -34,7 +34,7 @@ void setup() {
     pixels.show();
 
     for (int i = 0; i < NUM_PIXELS; i++){
-        pixels.setPixelColor(i, pixels.Color(100, 100, 100));
+        pixels.setPixelColor(i, pixels.Color(random(100), random(100), random(100)));
         pixels.show();
         delay(1);
     }
@@ -57,17 +57,13 @@ void loop() {
 
     if (!command.equals("")){ // if command has contents
 
-        if (command.charAt(0) == 's'){ // command to change speed that sin wave moves
-            stepSize = command.substring(5).toDouble();
+        if (equals(command.substring(0,5), "step=")){ // command to change speed that sin wave moves
+            stepSize = command.substring(5).toDouble();        
 
-        } else if (command.charAt(0) == '1'){ // change red color brightness
-            colorCoefficient[0] = command.substring(2).toDouble();
-        
-        } else if (command.charAt(0) == '2'){ // change green color brightness
-            colorCoefficient[1] = command.substring(2).toDouble();
-
-        }else if (command.charAt(0) == '3'){ // change blue color brightness
-            colorCoefficient[2] = command.substring(2).toDouble()
+        }else if (command.substring(0, command.indexOf('(')).equals("rgb")){ // change color brightness
+            colorCoefficient[0] = (command.substring(command.indexOf('(') + 1, command.indexOf(','))).toDouble();
+            colorCoefficient[1] = (command.substring(command.indexOf(',') + 1, command.lastIndexOf(','))).toDouble();
+            colorCoefficient[2] = (command.substring(command.lastIndexOf(',') + 1, command.indexOf(')'))).toDouble();
                                                                     
         } else if (command.charAt(0) == 'a'){
             a = command.substring(2).toDouble();
@@ -78,9 +74,12 @@ void loop() {
         } else if (command.charAt(0) == 'c'){
             c = command.substring(2).toDouble();
             d = c;
-        } else if (command.charAt(0) == 'r'){ // read current values from the board
 
-            command = "";
+        } else if (equals("read", command)){ // read current values from the board
+
+            Send ("Red = " + String(colorCoefficient[0]));
+            Send ("Green = " + String(colorCoefficient[1]));
+            Send ("Blue = " + String(colorCoefficient[2]));
 
             Send ("Step = " + String(stepSize));
 
@@ -88,10 +87,6 @@ void loop() {
             Send ("b = " + String(b / M_PI));
             Send ("c = " + String(c));
 
-            Send ("Red = " + String(colorCoefficient[0]));
-            Send ("Green = " + String(colorCoefficient[1]));
-            Send ("Blue = " + String(colorCoefficient[2]));
-            
         }
         
     }
@@ -102,7 +97,7 @@ void loop() {
         intensity = c * (sin(b * (i + a))) + d; // big calculation
 
 
-        for (int i = 0; i < (sizeof(colorValue) / sizeof(double)); i++){ // scales color values depending on which color it in in order to create all colors
+        for (int i = 0; i < (sizeof(colorValue) / sizeof(double)); i++){ // scales color output depending on what the current color coefficients are
             colorValue[i] = intensity * colorCoefficient[i];
 
             if (colorValue[i] > MAX_BRIGHTNESS){ // max brightness
@@ -117,7 +112,7 @@ void loop() {
     pixels.show();
 
 
-    a += stepSize; // change a value to cycle smoothly. cycles from (-pi*(1/b)) to (pi*(1/b))
+    a += stepSize; // change a value to cycle smoothly
     if (a > M_PI * (1/b)){
         a = ((M_PI * -1) * (1/b)) + stepSize;
     }
@@ -131,5 +126,20 @@ void Send (String data){
         BluetoothDevice.print(data.charAt(i));
     }
     BluetoothDevice.print("\n");
+
+}
+
+boolean equals (String one, String two) {
+
+    if (one.length() == two.length()){
+        for (int i = 0; i < one.length(); i++){
+        if (one.charAt(i) != two.charAt(i)){
+            return false;
+        }
+    }
+
+    }
+
+    return true;
 
 }
