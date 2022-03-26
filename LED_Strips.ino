@@ -1,3 +1,5 @@
+// array
+
 #include <BluetoothSerial.h>
 #include <Adafruit_NeoPixel.h>
 #define PIN 19
@@ -16,6 +18,7 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUM_PIXELS, PIN, NEO_GRB + NEO_KHZ8
 double stepSize = 0.07;
 String command = "";
 
+boolean enable [NUM_PIXELS];
 double colorCoefficient [] = {1, 1, 1};
 double colorValue [] = {0,0,0};
 double intensity;
@@ -33,17 +36,21 @@ void setup() {
     pixels.begin();
     pixels.show();
 
-    for (int i = 0; i < NUM_PIXELS; i++){
+    for (int i = 0; i < NUM_PIXELS - 1; i++){
+        enable[i] = true;
+
         pixels.setPixelColor(i, pixels.Color(random(100), random(100), random(100)));
         pixels.show();
-        delay(1);
     }
 
 
     Serial.begin(115200);
-    BluetoothDevice.begin("ESP32 Lights"); // bluetooth device name
+    BluetoothDevice.begin("Ram Ranch Really Rocks"); // bluetooth device name
 
 }
+
+
+
 
 void loop() {
 
@@ -75,6 +82,19 @@ void loop() {
             c = command.substring(2).toDouble();
             d = c;
 
+        } else if (equals (command.substring(0,7), "enable(") == true) { // enable/disable leds
+
+            if (command.indexOf("-") == -1) { // if non existant
+                enable [command.substring(command.indexOf('(') + 1, command.indexOf(')')).toInt()] = !enable [command.substring(command.indexOf('(') + 1, command.indexOf(')')).toInt()];
+
+            } else { // change line of them
+                for (int i = command.substring(command.indexOf('(') + 1, command.indexOf('-')).toInt(); i < command.substring(command.indexOf('-') + 1, command.indexOf(')')).toInt(); i++) {
+                    enable [i] = !enable [i];
+                }
+
+            }
+
+
         } else if (equals("read", command)){ // read current values from the board
 
             Send ("Red = " + String(colorCoefficient[0]));
@@ -94,23 +114,27 @@ void loop() {
 
     for (int i = 0; i < NUM_PIXELS; i++){ // for all pixels
 
-        intensity = c * (sin(b * (i + a))) + d; // big calculation
+
+        if (enable[i] == true) {
+            intensity = c * (sin(b * (i + a))) + d; // big calculation
 
 
-        for (int i = 0; i < (sizeof(colorValue) / sizeof(double)); i++){ // scales color output depending on what the current color coefficients are
-            colorValue[i] = intensity * colorCoefficient[i];
+            for (int i = 0; i < (sizeof(colorValue) / sizeof(double)); i++){ // scales color output depending on what the current color coefficients are
+                colorValue[i] = intensity * colorCoefficient[i];
 
-            if (colorValue[i] > MAX_BRIGHTNESS){ // max brightness
-                colorValue[i] = MAX_BRIGHTNESS;
+                if (colorValue[i] > MAX_BRIGHTNESS){ // max brightness
+                    colorValue[i] = MAX_BRIGHTNESS;
+                }
             }
-        }
 
-        pixels.setPixelColor(i, pixels.Color(colorValue[0], colorValue[1], colorValue[2]));
+            pixels.setPixelColor(i, pixels.Color(colorValue[0], colorValue[1], colorValue[2]));
+        } else {
+            pixels.setPixelColor(i, 0, 0, 0);
+        }
 
     }
     delay (delayValue);
     pixels.show();
-
 
     a += stepSize; // change a value to cycle smoothly
     if (a > M_PI * (1/b)){
@@ -122,22 +146,22 @@ void loop() {
 
 void Send (String data){
 
+    BluetoothDevice.print("\n");
     for (int i = 0; i < data.length(); i++){
         BluetoothDevice.print(data.charAt(i));
     }
-    BluetoothDevice.print("\n");
-
 }
 
 boolean equals (String one, String two) {
 
     if (one.length() == two.length()){
         for (int i = 0; i < one.length(); i++){
-        if (one.charAt(i) != two.charAt(i)){
-            return false;
+            if (one.charAt(i) != two.charAt(i)){
+                return false;
+            }
         }
-    }
-
+    } else {
+        return false;
     }
 
     return true;
