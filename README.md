@@ -6,8 +6,7 @@ Commands received through Bluetooth serial. Math based on [this function](https:
 | Command | function | example |
 | :----: | :----: | :----: |
 | step=value | Changes the speed at which the sin waves move.<br /> Higher values make the wave move faster. | step=-0.5 |
-| rgb(red value, green value,<br />blue value) | Changes the color of the Leds.<br /> Color values are typically from 0-1 but this is not required. | rgb(0.5,0,1) |
-| rgb(red value, green value,<br />blue value) | Changes the color of the Leds.<br /> Values from 1-255 for typical rgb usage. | rgb(16,52,166) |
+| rgb(red value, green value,<br />blue value) | Changes the color of the Leds.<br /> Values from 0-255| rgb(16,52,166) |
 | a=value | Changes the horizontal shift of the sin wave.<br /> This command starts to matter more as your b value approaches 0. | a=2.2 |
 | b=value | Changes the wavelength. Gets wider as the b value approaches 0. | b=0.15 |
 | c=value | Changes the amplitude of the sin wave.<br /> The higher this number, The brighter the LED. | c=100 |
